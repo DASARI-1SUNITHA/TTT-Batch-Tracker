@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batch Track | Tweak Talent Technologies</title>
+<style>
+:root{--bg:#0f2a2e;--panel:#173d42;--ink:#f3f7f6;--muted:#a9c4c4;--accent:#ffc83d;--ok:#4cd08a;--no:#ff7a6b;--line:#2a5a60}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:Georgia,"Times New Roman",serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.page{display:none;min-height:100%;padding:40px 20px;align-items:center;justify-content:center}
+.page.active{display:flex}
+.wrap{width:100%;max-width:720px}
+h1{font-size:clamp(2.2rem,7vw,3.8rem);line-height:1.1;letter-spacing:-.01em}
+h2{font-size:1.8rem;margin-bottom:6px}
+p.lead{color:var(--muted);margin:16px 0 32px;max-width:52ch}
+button,select{font:inherit}
+.btn{background:var(--accent);color:#1b1b1b;border:0;padding:14px 28px;font-weight:bold;border-radius:6px;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line);padding:10px 18px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+label{display:block;color:var(--muted);margin-bottom:8px}
+select{width:100%;padding:14px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);margin-bottom:20px}
+.company{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:20px}
+.company small{color:var(--muted);display:block}
+.hr{color:var(--accent);font-size:1.1rem}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px}
+th,td{text-align:left;padding:12px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:normal}
+.tag{padding:3px 12px;border-radius:99px;font-size:.9rem;font-weight:bold}
+.Selected{background:rgba(76,208,138,.15);color:var(--ok)}
+.Rejected{background:rgba(255,122,107,.15);color:var(--no)}
+.counts{color:var(--muted)}
+.counts b{color:var(--ink)}
+.overflow{overflow-x:auto}
+</style>
+</head>
+<body>
+
+<!-- Page 1: Welcome -->
+<section id="welcome" class="page active">
+  <div class="wrap">
+    <h1>Tweak Talent Technologies</h1>
+    <p class="lead">Welcome to Batch Track. Pick a batch to see its HR contact and which candidates were selected or rejected.</p>
+    <button class="btn" id="startBtn">Select a batch</button>
+  </div>
+</section>
+
+<!-- Page 2: Choose batch -->
+<section id="choose" class="page">
+  <div class="wrap">
+    <h2>Select your batch</h2>
+    <p class="lead">Choose a batch from the list.</p>
+    <label for="batchSelect">Batch</label>
+    <select id="batchSelect">
+      <option value="">Choose a batch</option>
+    </select>
+    <button class="btn ghost" id="backWelcome">Back</button>
+  </div>
+</section>
+
+<!-- Page 3: Batch information -->
+<section id="info" class="page">
+  <div class="wrap">
+    <div class="company">
+      <div><small>Company</small><strong id="companyName"></strong></div>
+      <div><small id="batchLabel"></small><span class="hr" id="hrInfo"></span></div>
+    </div>
+    <p class="counts" id="counts"></p>
+    <div class="overflow">
+      <table>
+        <thead><tr><th>Candidate</th><th>Status</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <button class="btn ghost" id="backChoose">Choose another batch</button>
+  </div>
+</section>
+
+<script>
+// ===== EDIT YOUR DATA HERE =====
+const COMPANY = "Tweak Talent Technologies";
+const BATCHES = {
+  "Batch 1": {
+    hrName: "HR Name 1",
+    hrPhone: "+91 98765 43210",
+    candidates: [
+      {name: "Candidate A", status: "Selected"},
+      {name: "Candidate B", status: "Rejected"},
+      {name: "Candidate C", status: "Selected"}
+    ]
+  },
+  "Batch 2": {
+    hrName: "HR Name 2",
+    hrPhone: "+91 91234 56789",
+    candidates: [
+      {name: "Candidate D", status: "Rejected"},
+      {name: "Candidate E", status: "Selected"}
+    ]
+  },
+  "Batch 3": {
+    hrName: "HR Name 3",
+    hrPhone: "+91 99887 76655",
+    candidates: [
+      {name: "Candidate F", status: "Selected"},
+      {name: "Candidate G", status: "Selected"},
+      {name: "Candidate H", status: "Rejected"}
+    ]
+  }
+};
+// ===============================
+
+const $ = id => document.getElementById(id);
+function show(id){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+const sel = $("batchSelect");
+Object.keys(BATCHES).forEach(b => {
+  const o = document.createElement("option");
+  o.value = o.textContent = b;
+  sel.appendChild(o);
+});
+
+$("startBtn").onclick = () => show("choose");
+$("backWelcome").onclick = () => show("welcome");
+$("backChoose").onclick = () => { sel.value = ""; show("choose"); };
+
+sel.onchange = () => {
+  const b = BATCHES[sel.value];
+  if(!b) return;
+  $("companyName").textContent = COMPANY;
+  $("batchLabel").textContent = sel.value + " HR: " + b.hrName;
+  $("hrInfo").textContent = b.hrPhone;
+  const s = b.candidates.filter(c => c.status === "Selected").length;
+  $("counts").innerHTML = "<b>" + s + "</b> selected, <b>" + (b.candidates.length - s) + "</b> rejected";
+  const rows = $("rows");
+  rows.innerHTML = "";
+  b.candidates.forEach(c => {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td"); td1.textContent = c.name;
+    const td2 = document.createElement("td");
+    const t = document.createElement("span");
+    t.className = "tag " + c.status; t.textContent = c.status;
+    td2.appendChild(t); tr.append(td1, td2); rows.appendChild(tr);
+  });
+  show("info");
+};
+</script>
+</body>
+</html>
